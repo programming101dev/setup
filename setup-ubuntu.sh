@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Function to log and handle errors
 handle_error() {
@@ -45,7 +45,7 @@ done
 # Additional setup for Wireshark
 if dpkg -l | grep -q wireshark; then
     echo "Configuring Wireshark..."
-    echo "Yes" | sudo dpkg-reconfigure wireshark-common || handle_error "Failed to configure Wireshark."
+#    echo "Yes" | sudo dpkg-reconfigure wireshark-common || handle_error "Failed to configure Wireshark."
     sudo usermod -a -G wireshark $(whoami) || handle_error "Failed to add user to Wireshark group."
 else
     echo "Wireshark not installed. Skipping configuration."
