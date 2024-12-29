@@ -1,9 +1,33 @@
 #!/usr/bin/env bash
 
 # List of programs to check
-programs=("arp" "bash" "cmake" "clang" "clang++" "clang-format" "clang-tidy"
-          "compress" "cppcheck" "curl" "dot" "g++" "gcc" "git" "gpg" "gp" "make" "nano"
-          "ping" "pax" "ssh" "sudo" "tcpdump" "traceroute" "wget")
+programs=(
+  "arp"
+  "bash"
+  "cmake"
+  "clang"
+  "clang++"
+  "clang-format"
+  "clang-tidy"
+  "compress"
+  "cppcheck"
+  "curl"
+  "dot"
+  "g++"
+  "gcc"
+  "git"
+  "gpg"
+  "gp"
+  "make"
+  "nano"
+  "ping"
+  "pax"
+  "ssh"
+  "sudo"
+  "tcpdump"
+  "traceroute"
+  "wget"
+)
 
 # Initialize a variable to count missing programs
 missing=0
