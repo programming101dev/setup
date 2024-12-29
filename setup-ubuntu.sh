@@ -18,7 +18,6 @@ packages=(
     traceroute
     curl
     libfuse2
-    git
     gcc
     g++
     clang
