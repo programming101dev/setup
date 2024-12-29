@@ -29,6 +29,8 @@ packages=(
     gdbm-devel
     pari-gp
     hping3
+    nmap
+    zenmap
 )
 
 # Install packages
@@ -46,8 +48,8 @@ else
 fi
 
 # Install Zenmap via Flatpak
-echo "Installing Zenmap via Flatpak..."
-flatpak install -y org.nmap.Zenmap || handle_error "Failed to install Zenmap."
+#echo "Installing Zenmap via Flatpak..."
+#sudo flatpak install -y org.nmap.Zenmap || handle_error "Failed to install Zenmap."
 
 # Add /usr/local/lib64 to library path
 echo "Adding /usr/local/lib64 to library path..."
