@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-#!/bin/bash
-
 # Function to log and handle errors
 handle_error() {
     echo "Error: $1" >&2
@@ -19,7 +17,6 @@ pkg_packages=(
     wget
     nano
     hping3
-    pari-gp
     git
     cmake
     gcc
@@ -33,22 +30,28 @@ for package in "${pkg_packages[@]}"; do
     sudo pkg install -y "$package" || handle_error "Failed to install $package with pkg."
 done
 
-# Fix cppcheck installation
-#if ! command -v cppcheck > /dev/null 2>&1; then
-#    echo "Fixing cppcheck installation..."
-#    wget https://github.com/danmar/cppcheck/archive/2.13.0.zip || handle_error "Failed to download cppcheck source."
-#    unzip 2.13.0.zip || handle_error "Failed to unzip cppcheck source."
-#    cd cppcheck-2.13.0 || handle_error "Failed to change directory to cppcheck source."
-#    cmake -S . -B build || handle_error "Failed to configure cppcheck build."
-#    cmake --build build || handle_error "Failed to build cppcheck."
-#    if ! grep -q "#include <sys/wait.h>" cppcheck/lib/threadexecutor.cpp; then
-#        echo "Adding missing include to cppcheck/lib/threadexecutor.cpp..."
-#        echo "#include <sys/wait.h>" | tee -a cppcheck/lib/threadexecutor.cpp || handle_error "Failed to patch cppcheck."
-#        cmake --build build || handle_error "Failed to rebuild cppcheck after patch."
-#    fi
-#    sudo cmake --install build || handle_error "Failed to install cppcheck."
-#    cd .. && rm -rf cppcheck-2.13.0* || handle_error "Failed to clean up cppcheck source."
-#fi
+# Install PARI/GP using the FreeBSD Ports system
+PARI_PORT_DIR="/usr/ports/math/pari"
+if [ -d "$PARI_PORT_DIR" ]; then
+    echo "Installing PARI/GP from ports..."
+    cd "$PARI_PORT_DIR" || handle_error "Failed to navigate to $PARI_PORT_DIR."
+    sudo make install clean || handle_error "Failed to install PARI/GP from ports."
+else
+    handle_error "Ports directory for PARI/GP not found at $PARI_PORT_DIR. Ensure that the ports tree is up to date."
+fi
+
+# Fix cppcheck installation (if needed)
+# Uncomment and modify this block if cppcheck issues arise again
+# if ! command -v cppcheck > /dev/null 2>&1; then
+#     echo "Fixing cppcheck installation..."
+#     wget https://github.com/danmar/cppcheck/archive/2.13.0.zip || handle_error "Failed to download cppcheck source."
+#     unzip 2.13.0.zip || handle_error "Failed to unzip cppcheck source."
+#     cd cppcheck-2.13.0 || handle_error "Failed to change directory to cppcheck source."
+#     cmake -S . -B build || handle_error "Failed to configure cppcheck build."
+#     cmake --build build || handle_error "Failed to build cppcheck."
+#     sudo cmake --install build || handle_error "Failed to install cppcheck."
+#     cd .. && rm -rf cppcheck-2.13.0* || handle_error "Failed to clean up cppcheck source."
+# fi
 
 # Update /etc/rc.conf for ldconfig
 sudo bash -c 'echo "ldconfig_paths=\"/usr/local/lib64\"" >> /etc/rc.conf' || handle_error "Failed to update /etc/rc.conf."
