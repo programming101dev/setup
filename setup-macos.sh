@@ -37,7 +37,6 @@ brew_packages=(
     cppcheck
     pari
     wget
-    zenmap
     graphviz
     tmux
     cmake

@@ -45,10 +45,6 @@ else
     echo "Wireshark not installed. Skipping configuration."
 fi
 
-# Install Zenmap via Flatpak
-echo "Installing Zenmap via Flatpak..."
-flatpak install -y org.nmap.Zenmap || handle_error "Failed to install Zenmap."
-
 # Add /usr/local/lib64 to library path
 echo "Adding /usr/local/lib64 to library path..."
 echo "/usr/local/lib64" | sudo tee /etc/ld.so.conf.d/local-lib64.conf > /dev/null || handle_error "Failed to modify library path."

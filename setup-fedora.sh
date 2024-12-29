@@ -30,7 +30,6 @@ packages=(
     pari-gp
     hping3
     nmap
-    zenmap
 )
 
 # Install packages
@@ -46,10 +45,6 @@ if rpm -q wireshark > /dev/null; then
 else
     echo "Wireshark not installed. Skipping configuration."
 fi
-
-# Install Zenmap via Flatpak
-#echo "Installing Zenmap via Flatpak..."
-#sudo flatpak install -y org.nmap.Zenmap || handle_error "Failed to install Zenmap."
 
 # Add /usr/local/lib64 to library path
 echo "Adding /usr/local/lib64 to library path..."
