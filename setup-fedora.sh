@@ -30,6 +30,7 @@ packages=(
     pari-gp
     hping3
     nmap
+    dot
 )
 
 # Install packages
