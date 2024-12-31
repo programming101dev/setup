@@ -27,6 +27,7 @@ programs=(
   "tcpdump"
   "traceroute"
   "wget"
+  "lsof"
 )
 
 # Initialize a variable to count missing programs

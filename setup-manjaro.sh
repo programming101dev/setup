@@ -14,21 +14,24 @@ packages=(
     pax
     ncompress
     gcc
-    g++
     clang
     clang-tools-extra
     make
     cmake
     cppcheck
-    libasan
-    libubsan
     obs-studio
     kdenlive
-    wireshark-cli
+    wireshark-qt
     strace
     gdbm
-    pari-gp
+    pari
     hping
+    net-tools
+    graphviz
+    tcpdump
+    traceroute
+    lsof
+    yay
 )
 
 # Install packages
@@ -38,7 +41,7 @@ for package in "${packages[@]}"; do
 done
 
 # Additional setup for Wireshark
-if pacman -Qi wireshark-cli > /dev/null; then
+if pacman -Qi wireshark-qt > /dev/null; then
     echo "Configuring Wireshark..."
     sudo usermod -a -G wireshark $(whoami) || handle_error "Failed to add user to Wireshark group."
 else
