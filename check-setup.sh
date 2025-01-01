@@ -28,6 +28,7 @@ programs=(
   "traceroute"
   "wget"
   "lsof"
+  "python3"
 )
 
 # Initialize a variable to count missing programs
