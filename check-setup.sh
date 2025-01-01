@@ -29,6 +29,8 @@ programs=(
   "wget"
   "lsof"
   "python3"
+  "wireshark"
+  "strace"
 )
 
 # Initialize a variable to count missing programs
