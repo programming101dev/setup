@@ -12,8 +12,6 @@ sudo pkg upgrade -y || handle_error "Failed to upgrade packages."
 
 # List of packages to install with pkg
 pkg_packages=(
-    sudo
-    bash
     wget
     nano
     hping3
@@ -22,6 +20,11 @@ pkg_packages=(
     gcc
     llvm
     cppcheck
+    pari
+    python3
+    lsof
+    gnugp
+    graphviz
 )
 
 # Install packages with pkg
@@ -29,16 +32,6 @@ for package in "${pkg_packages[@]}"; do
     echo "Installing $package with pkg..."
     sudo pkg install -y "$package" || handle_error "Failed to install $package with pkg."
 done
-
-# Install PARI/GP using the FreeBSD Ports system
-PARI_PORT_DIR="/usr/ports/math/pari"
-if [ -d "$PARI_PORT_DIR" ]; then
-    echo "Installing PARI/GP from ports..."
-    cd "$PARI_PORT_DIR" || handle_error "Failed to navigate to $PARI_PORT_DIR."
-    sudo make install clean || handle_error "Failed to install PARI/GP from ports."
-else
-    handle_error "Ports directory for PARI/GP not found at $PARI_PORT_DIR. Ensure that the ports tree is up to date."
-fi
 
 # Fix cppcheck installation (if needed)
 # Uncomment and modify this block if cppcheck issues arise again
@@ -54,9 +47,10 @@ fi
 # fi
 
 # Update /etc/rc.conf for ldconfig
-sudo bash -c 'echo "ldconfig_paths=\"/usr/local/lib64\"" >> /etc/rc.conf' || handle_error "Failed to update /etc/rc.conf."
+sudo bash -c 'echo "ldconfig_paths=\"/usr/local/lib:/usr/local/lib64\"" >> /etc/rc.conf' || handle_error "Failed to update /etc/rc.conf."
 
 # Reload ldconfig paths
+sudo ldconfig -m /usr/local/lib || handle_error "Failed to reload ldconfig paths."
 sudo ldconfig -m /usr/local/lib64 || handle_error "Failed to reload ldconfig paths."
 
 # Completion message
