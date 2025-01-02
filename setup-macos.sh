@@ -8,7 +8,6 @@ handle_error() {
 
 # List of packages to install with Homebrew
 brew_packages=(
-    cmake
     cppcheck
     gcc
     gpg
