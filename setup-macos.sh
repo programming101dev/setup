@@ -12,6 +12,7 @@ brew_packages=(
     gcc
     gpg
     graphviz
+    nmap
     pari
     tmux
     wget

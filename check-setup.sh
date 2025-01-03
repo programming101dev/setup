@@ -21,6 +21,7 @@ programs=(
   "lsof"
   "make"
   "nano"
+  "nmap"
   "ping"
   "pax"
   "python3"
