@@ -34,6 +34,9 @@ packages=(
   libgdbm-compat-dev
   libbsd-dev
   pari-gp
+  nmap
+  ncat
+  tmux
 )
 
 # Install packages
