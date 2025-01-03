@@ -32,6 +32,8 @@ packages=(
     traceroute
     lsof
     yay
+    nmap
+    tmux
 )
 
 # Install packages
