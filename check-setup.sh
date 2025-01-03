@@ -18,6 +18,7 @@ programs=(
   "git"
   "gpg"
   "gp"
+  "hping3"
   "lsof"
   "make"
   "nano"

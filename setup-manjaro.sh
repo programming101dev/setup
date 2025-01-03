@@ -45,7 +45,7 @@ done
 # Additional setup for Wireshark
 if pacman -Qi wireshark-qt > /dev/null; then
     echo "Configuring Wireshark..."
-    sudo usermod -a -G wireshark $(whoami) || handle_error "Failed to add user to Wireshark group."
+    sudo usermod -a -G wireshark "$(whoami)" || handle_error "Failed to add user to Wireshark group."
 else
     echo "Wireshark not installed. Skipping configuration."
 fi
