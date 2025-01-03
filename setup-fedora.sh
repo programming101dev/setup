@@ -31,6 +31,7 @@ packages=(
     hping3
     nmap
     dot
+    tmux
 )
 
 # Install packages
