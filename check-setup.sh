@@ -18,35 +18,40 @@ programs=(
   "git"
   "gpg"
   "gp"
+  "lsof"
   "make"
   "nano"
   "ping"
   "pax"
+  "python3"
   "ssh"
   "sudo"
   "tcpdump"
+  "tmux"
   "traceroute"
   "wget"
-  "lsof"
-  "python3"
-  "wireshark"
-  "strace"
 )
-
-# Initialize a variable to count missing programs
-missing=0
 
 # Get the system's platform using uname
 platform=$(uname)
 
+# Adjust programs list based on platform
+if [ "$platform" = "Linux" ]; then
+    programs+=("strace" "wireshark")
+elif [ "$platform" = "FreeBSD" ]; then
+    programs+=("ktrace")
+elif [ "$platform" = "Darwin" ]; then  # macOS
+    programs+=("/Applications/Wireshark.app/Contents/MacOS/Wireshark")
+fi
+
+# Initialize a variable to count missing programs
+missing=0
+
 # Check if each program exists
 for prog in "${programs[@]}"; do
     if ! command -v "$prog" &> /dev/null; then
-        # Exclude "strace" check on platforms other than Linux
-        if [ "$platform" != "Linux" ] || [ "$prog" != "strace" ]; then
-            echo "$prog is not installed."
-            ((missing++))
-        fi
+        echo "$prog is not installed."
+        ((missing++))
     fi
 done
 
