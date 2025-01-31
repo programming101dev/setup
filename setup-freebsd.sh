@@ -53,5 +53,7 @@ sudo bash -c 'echo "ldconfig_paths=\"/usr/local/lib:/usr/local/lib64\"" >> /etc/
 sudo ldconfig -m /usr/local/lib || handle_error "Failed to reload ldconfig paths."
 sudo ldconfig -m /usr/local/lib64 || handle_error "Failed to reload ldconfig paths."
 
+./setup-groups.sh
+
 # Completion message
 echo "All tools installed and configured successfully."

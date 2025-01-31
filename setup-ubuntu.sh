@@ -53,5 +53,7 @@ else
     echo "Wireshark not installed. Skipping configuration."
 fi
 
+./setup-groups.sh
+
 # Completion message
 echo "All tools installed and configured successfully. Please log out and log back in for group changes to take effect."

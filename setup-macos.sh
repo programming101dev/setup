@@ -26,5 +26,7 @@ done
 
 sudo bash -c 'echo "export MallocNanoZone=0" >> /etc/zshenv' || handle_error "Failed to add MallocNanoZone to /etc/zshenv."
 
+./setup-groups.sh
+
 # Completion message
 echo "All tools installed and configured successfully. Please reboot your computer for changes to take effect."
