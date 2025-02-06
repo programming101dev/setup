@@ -36,6 +36,8 @@ case "$os" in
         ;;
 esac
 
+sudo mkdir -p /usr/local/include /usr/local/lib /usr/local/lib64
+
 # Process each directory only if it exists.
 for dir in /usr/local/include /usr/local/lib /usr/local/lib64; do
     if [ -d "$dir" ]; then
