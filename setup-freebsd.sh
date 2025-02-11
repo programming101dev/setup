@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/local/bin/bash
 
 # Function to log and handle errors
 handle_error() {
@@ -12,6 +12,7 @@ sudo pkg upgrade -y || handle_error "Failed to upgrade packages."
 
 # List of packages to install with pkg
 pkg_packages=(
+    bash
     wget
     nano
     hping3
@@ -47,11 +48,10 @@ done
 # fi
 
 # Update /etc/rc.conf for ldconfig
-sudo bash -c 'echo "ldconfig_paths=\"/usr/local/lib:/usr/local/lib64\"" >> /etc/rc.conf' || handle_error "Failed to update /etc/rc.conf."
+sudo sysrc -f /etc/rc.conf ldconfig_paths="/usr/local/lib /usr/local/lib64"
 
 # Reload ldconfig paths
-sudo ldconfig -m /usr/local/lib || handle_error "Failed to reload ldconfig paths."
-sudo ldconfig -m /usr/local/lib64 || handle_error "Failed to reload ldconfig paths."
+sudo ldconfig -m /usr/local/lib /usr/local/lib64
 
 ./setup-groups.sh
 
