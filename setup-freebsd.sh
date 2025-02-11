@@ -41,7 +41,5 @@ ldconfig -m /usr/local/lib /usr/local/lib64
 # Grant sudo access to all users (with password)
 echo "ALL ALL=(ALL) ALL" | sudo tee -a /usr/local/etc/sudoers.d/all-users
 
-./setup-groups.sh
-
 # Completion message
 echo "All tools installed and configured successfully."
