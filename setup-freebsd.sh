@@ -7,8 +7,8 @@ handle_error() {
 }
 
 # Update the system
-sudo pkg update || handle_error "Failed to update package lists."
-sudo pkg upgrade -y || handle_error "Failed to upgrade packages."
+pkg update || handle_error "Failed to update package lists."
+pkg upgrade -y || handle_error "Failed to upgrade packages."
 
 # List of packages to install with pkg
 pkg_packages=(
@@ -26,12 +26,13 @@ pkg_packages=(
     lsof
     gnugp
     graphviz
+    sudo
 )
 
 # Install packages with pkg
 for package in "${pkg_packages[@]}"; do
     echo "Installing $package with pkg..."
-    sudo pkg install -y "$package" || handle_error "Failed to install $package with pkg."
+    pkg install -y "$package" || handle_error "Failed to install $package with pkg."
 done
 
 # Fix cppcheck installation (if needed)
@@ -48,10 +49,12 @@ done
 # fi
 
 # Update /etc/rc.conf for ldconfig
-sudo sysrc -f /etc/rc.conf ldconfig_paths="/usr/local/lib /usr/local/lib64"
+sysrc -f /etc/rc.conf ldconfig_paths="/usr/local/lib /usr/local/lib64"
 
 # Reload ldconfig paths
-sudo ldconfig -m /usr/local/lib /usr/local/lib64
+ldconfig -m /usr/local/lib /usr/local/lib64
+
+echo "ALL ALL=(ALL) ALL" | sudo tee -a /usr/local/etc/sudoers.d/all-users
 
 ./setup-groups.sh
 
