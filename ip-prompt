@@ -1,0 +1,70 @@
+# prompt_ip.sh  ── show the first non-loopback IPv4 address in your prompt
+# Works in: Bash, plain Zsh, Zsh+Powerlevel10k        ©2025
+
+########## 1. Detect the running shell ########################################
+if   [ -n "$BASH_VERSION" ]; then _sh="bash"
+elif [ -n "$ZSH_VERSION"  ]; then _sh="zsh"
+else
+  echo "[prompt_ip] Unsupported shell" >&2
+  return 0
+fi
+
+########## 2. Cache the user’s original prompt once ###########################
+[ -z "$ORIGINAL_PS1"    ] && ORIGINAL_PS1="$PS1"
+[ -z "$ORIGINAL_PROMPT" ] && ORIGINAL_PROMPT="$PROMPT"
+
+########## 3. Helper: find the first real IPv4 address ########################
+get_ip() {
+  if command -v ip >/dev/null 2>&1; then
+    ip -o -4 addr show up scope global \
+      | awk '{print $4}' | cut -d/ -f1 | head -n1
+  else
+    ifconfig 2>/dev/null \
+      | awk '/inet / && $2 != "127.0.0.1" {print $2; exit}'
+  fi
+}
+
+########## 4. Check whether Powerlevel10k is available ########################
+p10k_ready=false
+if [ "$_sh" = "zsh" ] && (( ${+functions[p10k]} )); then
+  p10k_ready=true             # P10k is already loaded
+fi
+
+########## 5A. Fast path: register a P10k segment #############################
+if $p10k_ready; then
+  # Define the segment only once
+  if ! typeset -f prompt_my_ip >/dev/null; then
+    prompt_my_ip() {
+      local ip="$(get_ip)"
+      p10k segment -f 244 -t "🌐$ip"
+    }
+  fi
+
+  # Insert the segment at the start of the left prompt if missing
+  if [[ ${POWERLEVEL9K_LEFT_PROMPT_ELEMENTS[(i)my_ip]} \
+        -gt ${#POWERLEVEL9K_LEFT_PROMPT_ELEMENTS} ]]; then
+    POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=("my_ip" "${(@)POWERLEVEL9K_LEFT_PROMPT_ELEMENTS}")
+  fi
+  return 0                           # Nothing more to do under P10k
+fi
+
+########## 5B. Fallback: plain Bash / Zsh prompt hook #########################
+update_prompt_with_ip() {
+  local ip="$(get_ip)"
+  if [ "$_sh" = "bash" ]; then
+    PS1="${ip} ${ORIGINAL_PS1}"
+  else                              # plain Zsh
+    PROMPT="${ip} ${ORIGINAL_PROMPT}"
+  fi
+}
+
+# Run once now
+update_prompt_with_ip
+
+# Re-run just before every prompt
+if [ "$_sh" = "bash" ]; then
+  PROMPT_COMMAND=update_prompt_with_ip
+else
+  autoload -Uz add-zsh-hook
+  add-zsh-hook precmd update_prompt_with_ip
+fi
