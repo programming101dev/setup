@@ -12,31 +12,32 @@ sudo apt upgrade -y || handle_error "Failed to upgrade packages."
 
 # List of packages to install
 packages=(
-  pax
-  ncompress
-  net-tools
-  traceroute
-  curl
-  libfuse2
-  gcc
-  g++
   clang
   clang-tidy
   clang-format
-  make
   cmake
   cppcheck
+  curl
+  gcc
+  g++
   graphviz
-  obs-studio
+  hping3
   kdenlive
-  wireshark
+  libbsd-dev
+  libfuse2
   libgdbm-dev
   libgdbm-compat-dev
-  libbsd-dev
-  pari-gp
-  nmap
   ncat
+  ncompress
+  nmap
+  make
+  net-tools
+  obs-studio
+  pari-gp
+  pax
   tmux
+  traceroute
+  wireshark
 )
 
 # Install packages
