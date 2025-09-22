@@ -11,7 +11,7 @@ pkg update || handle_error "Failed to update package lists."
 pkg upgrade -y || handle_error "Failed to upgrade packages."
 
 # List of packages (POSIX-compatible format)
-pkg_packages="bash wget nano hping3 git cmake gcc llvm cppcheck pari python3 lsof gnupg graphviz sudo"
+pkg_packages="bash wget nano hping3 git cmake gcc llvm cppcheck pari python3 lsof gnupg graphviz sudo tmux nmap"
 
 # Install packages with pkg
 for package in $pkg_packages; do
