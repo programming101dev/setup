@@ -22,6 +22,7 @@ packages=(
   g++
   graphviz
   hping3
+  iperf3
   kdenlive
   libbsd-dev
   libfuse2

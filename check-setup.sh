@@ -40,7 +40,7 @@ platform=$(uname)
 
 # Adjust programs list based on platform
 if [ "$platform" = "Linux" ]; then
-    programs+=("strace" "wireshark")
+    programs+=("strace" "wireshark" "iperf3")
 elif [ "$platform" = "FreeBSD" ]; then
     programs+=("ktrace")
 elif [ "$platform" = "Darwin" ]; then  # macOS

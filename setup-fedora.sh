@@ -11,27 +11,29 @@ sudo dnf update -y || handle_error "Failed to update package lists."
 
 # List of packages to install
 packages=(
-    pax
-    ncompress
-    gcc
-    g++
+    c++
     clang
     clang-tools-extra
-    make
     cmake
     cppcheck
+    dot
+    g++
+    gcc
+    gdbm-devel
+    hping3
+    iperf3
+    kdenlive
     libasan
     libubsan
-    obs-studio
-    kdenlive
-    wireshark
-    strace
-    gdbm-devel
-    pari-gp
-    hping3
+    make
+    ncompress
     nmap
-    dot
+    obs-studio
+    pari-gp
+    pax
+    strace
     tmux
+    wireshark
 )
 
 # Install packages

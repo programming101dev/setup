@@ -11,29 +11,30 @@ sudo pacman -Syu --noconfirm || handle_error "Failed to update package lists."
 
 # List of packages to install
 packages=(
-    pax
-    ncompress
-    gcc
-    clang
-    clang-tools-extra
-    make
-    cmake
-    cppcheck
-    obs-studio
-    kdenlive
-    wireshark-qt
-    strace
-    gdbm
-    pari
-    hping
-    net-tools
-    graphviz
-    tcpdump
-    traceroute
-    lsof
-    yay
-    nmap
-    tmux
+   clang
+   clang-tools-extra
+   cmake
+   cppcheck
+   gcc
+   gdbm
+   graphviz
+   hping
+   iperf3
+   kdenlive
+   lsof
+   make
+   ncompress
+   net-tools
+   nmap
+   obs-studio
+   pari
+   pax
+   strace
+   tcpdump
+   tmux
+   traceroute
+   wireshark-qt
+   yay
 )
 
 # Install packages
