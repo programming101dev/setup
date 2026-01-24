@@ -1,0 +1,3 @@
+Install OS: https://docs.google.com/document/d/1AKsyO4qyITxev9rvYEiviYB2-K3i_kK0-2FoOBIrvO0
+Setup OS: https://docs.google.com/document/d/15JCmzqnLuczukIqzNsodOhtzwvEUgJemrc0R5iCFjmU
+Setup Libraries: https://docs.google.com/document/d/1lPeLdzQNFyC8lHYWTLIi1YKX_iGQFLOEni1vq2FQWRA
