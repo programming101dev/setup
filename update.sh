@@ -81,8 +81,7 @@ update_freebsd_classic() {
   need_cmd freebsd-update
 
   echo "Updating FreeBSD base system with freebsd-update..."
-  as_root freebsd-update fetch
-  as_root freebsd-update install
+  as_root freebsd-update fetch install
 
   if have_cmd pkg; then
     echo "Updating packages..."
