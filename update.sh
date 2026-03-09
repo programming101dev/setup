@@ -77,12 +77,21 @@ is_freebsd_pkgbase() {
 }
 
 update_freebsd_classic() {
+  local fetch_output
+
   echo "Detected traditional FreeBSD base."
   need_cmd freebsd-update
 
-  echo "Updating FreeBSD base system with freebsd-update..."
-  as_root freebsd-update fetch
-  as_root freebsd-update install
+  echo "Checking FreeBSD base system updates..."
+  fetch_output="$(as_root freebsd-update fetch 2>&1)" || die "freebsd-update fetch failed"
+  printf '%s\n' "$fetch_output"
+
+  if printf '%s\n' "$fetch_output" | grep -Fq "No updates needed"; then
+    echo "FreeBSD base system is already up to date."
+  else
+    echo "Installing FreeBSD base system updates..."
+    as_root freebsd-update install
+  fi
 
   if have_cmd pkg; then
     echo "Updating packages..."
@@ -95,7 +104,6 @@ update_freebsd_classic() {
 
 update_freebsd_pkgbase() {
   echo "Detected FreeBSD pkgbase."
-
   need_cmd pkg
 
   echo "Updating pkg repositories..."
