@@ -1,122 +1,133 @@
-#!/bin/sh
-# disable_all_firewalls.sh
-# Ensures no firewall rules are active now, and disables firewall services at boot.
-# Optional flag: --persist-empty-nft writes an empty /etc/nftables.conf and keeps nftables.service enabled.
-# Usage: sudo ./disable0firewalls.sh [--persist-empty-nft]
+#!/usr/bin/env bash
 
-set -eu
+# disable-firewall.sh
+#
+# Purpose:
+# Completely remove packet filtering from a Linux system so that all
+# traffic is accepted. This is useful for teaching labs where students
+# must return a machine to a known "no firewall" baseline.
+#
+# What this script does:
+# 1. Flushes nftables rules
+# 2. Stops and disables common firewall managers
+# 3. Resets legacy iptables and ip6tables policies to ACCEPT
+# 4. Flushes all tables and user chains
+# 5. Prints verification output
+#
+# WARNING:
+# Running this script removes all firewall protection from the host.
+# Only use in controlled environments such as teaching labs.
 
-PERSIST_EMPTY_NFT=0
-if [ "${1-}" = "--persist-empty-nft" ]; then
-  PERSIST_EMPTY_NFT=1
+FORCE=0
+
+if [[ "${1:-}" == "--force" ]]; then
+    FORCE=1
 fi
 
-# Re-exec as root if needed
-if [ "${EUID-$(id -u)}" != "0" ]; then
-  exec sudo "$0" "$@"
+if [[ "$FORCE" -ne 1 ]]; then
+    echo
+    echo "This script will disable nftables, iptables, and common firewall managers."
+    echo "The system will accept all network traffic."
+    echo
+    read -r -p "Continue? [y/N] " answer
+
+    case "$answer" in
+        y|Y|yes|YES)
+            ;;
+        *)
+            echo "Aborted."
+            exit 0
+            ;;
+    esac
 fi
 
-have() { command -v "$1" >/dev/null 2>&1; }
+# ------------------------------------------------------------
+# nftables
+# ------------------------------------------------------------
 
-say() { printf '%s\n' "$*"; }
+echo
+echo "[1/5] Flushing nftables ruleset"
+sudo nft flush ruleset
 
-# 1) Clear nftables completely
-if have nft; then
-  say "[nft] Flushing ruleset"
-  nft flush ruleset 2>/dev/null || true
-else
-  say "[nft] nft not found, skipping"
-fi
+echo "[2/5] Disabling nftables service"
+sudo systemctl disable --now nftables 2>/dev/null || true
 
-# 2) Stop and disable nftables service
-if have systemctl; then
-  say "[systemd] Disabling nftables service"
-  systemctl disable --now nftables 2>/dev/null || true
-else
-  say "[systemd] systemctl not found, skipping service management"
-fi
+# ------------------------------------------------------------
+# Other firewall managers
+# ------------------------------------------------------------
 
-# 3) Stop and disable other common firewall managers
-if have systemctl; then
-  say "[systemd] Disabling firewalld, ufw, netfilter-persistent if present"
-  systemctl disable --now firewalld 2>/dev/null || true
-  systemctl disable --now ufw       2>/dev/null || true
-  systemctl disable --now netfilter-persistent 2>/dev/null || true
-fi
+echo
+echo "[3/5] Disabling other firewall managers (if present)"
 
-# 4) Set permissive policies and flush legacy iptables (IPv4)
-if have iptables; then
-  say "[iptables] Setting ACCEPT policies and flushing"
-  iptables -P INPUT   ACCEPT 2>/dev/null || true
-  iptables -P FORWARD ACCEPT 2>/dev/null || true
-  iptables -P OUTPUT  ACCEPT 2>/dev/null || true
-  iptables -F 2>/dev/null || true
-  iptables -t nat    -F 2>/dev/null || true
-  iptables -t mangle -F 2>/dev/null || true
-  iptables -X 2>/dev/null || true
-else
-  say "[iptables] iptables not found, skipping"
-fi
+sudo systemctl disable --now firewalld 2>/dev/null || true
+sudo systemctl disable --now ufw 2>/dev/null || true
+sudo systemctl disable --now netfilter-persistent 2>/dev/null || true
 
-# 5) Same for IPv6
-if have ip6tables; then
-  say "[ip6tables] Setting ACCEPT policies and flushing"
-  ip6tables -P INPUT   ACCEPT 2>/dev/null || true
-  ip6tables -P FORWARD ACCEPT 2>/dev/null || true
-  ip6tables -P OUTPUT  ACCEPT 2>/dev/null || true
-  ip6tables -F 2>/dev/null || true
-  ip6tables -t nat    -F 2>/dev/null || true   # nat may not exist
-  ip6tables -t mangle -F 2>/dev/null || true
-  ip6tables -X 2>/dev/null || true
-else
-  say "[ip6tables] ip6tables not found, skipping"
-fi
+# ------------------------------------------------------------
+# Legacy iptables IPv4
+# ------------------------------------------------------------
 
-# 6) Optional: persist an empty nftables config but keep the service enabled
-if [ "$PERSIST_EMPTY_NFT" -eq 1 ]; then
-  if have nft; then
-    say "[nft] Writing empty /etc/nftables.conf and enabling nftables service"
-    umask 022
-    # Single-quoted heredoc avoids shell expansion in all common shells
-    tee /etc/nftables.conf >/dev/null <<'EOF'
-flush ruleset
-EOF
-    if have systemctl; then
-      systemctl enable --now nftables
-      nft -f /etc/nftables.conf || true
-    fi
-  else
-    say "[nft] nft not found, cannot persist empty config"
-  fi
-fi
+echo
+echo "[4/5] Resetting iptables (IPv4)"
 
-# 7) Verification summary
-say ""
-say "=== Verification ==="
-if have nft; then
-  say "[nft] Current ruleset (should be empty):"
-  nft list ruleset || true
-fi
+sudo iptables -P INPUT ACCEPT 2>/dev/null || true
+sudo iptables -P FORWARD ACCEPT 2>/dev/null || true
+sudo iptables -P OUTPUT ACCEPT 2>/dev/null || true
 
-if have iptables; then
-  say "[iptables] Policies and rules:"
-  iptables -S || true
-fi
+sudo iptables -F 2>/dev/null || true
+sudo iptables -t nat -F 2>/dev/null || true
+sudo iptables -t mangle -F 2>/dev/null || true
+sudo iptables -t raw -F 2>/dev/null || true
+sudo iptables -t security -F 2>/dev/null || true
 
-if have ip6tables; then
-  say "[ip6tables] Policies and rules:"
-  ip6tables -S || true
-fi
+sudo iptables -X 2>/dev/null || true
 
-if have systemctl; then
-  say "[systemd] Service enablement state:"
-  for svc in nftables firewalld ufw netfilter-persistent; do
-    state="$(systemctl is-enabled "$svc" 2>/dev/null || true || true)"
-    [ -z "$state" ] && state="not-installed-or-static"
-    printf '%-24s %s\n' "$svc:" "$state"
-  done
-fi
+# ------------------------------------------------------------
+# Legacy iptables IPv6
+# ------------------------------------------------------------
 
-say ""
-say "Done. If nft output is empty and iptables policies are ACCEPT with no -A rules, no firewall is active."
-say "Use 'ss -lntup' to see which services are now exposed."
+echo
+echo "[5/5] Resetting ip6tables (IPv6)"
+
+sudo ip6tables -P INPUT ACCEPT 2>/dev/null || true
+sudo ip6tables -P FORWARD ACCEPT 2>/dev/null || true
+sudo ip6tables -P OUTPUT ACCEPT 2>/dev/null || true
+
+sudo ip6tables -F 2>/dev/null || true
+sudo ip6tables -t nat -F 2>/dev/null || true
+sudo ip6tables -t mangle -F 2>/dev/null || true
+sudo ip6tables -t raw -F 2>/dev/null || true
+sudo ip6tables -t security -F 2>/dev/null || true
+
+sudo ip6tables -X 2>/dev/null || true
+
+# ------------------------------------------------------------
+# Verification
+# ------------------------------------------------------------
+
+echo
+echo "------------------------------------------------------------"
+echo "Verification"
+echo "------------------------------------------------------------"
+
+echo
+echo "--- nftables ruleset ---"
+sudo nft list ruleset || true
+
+echo
+echo "--- iptables (IPv4) ---"
+sudo iptables -S || true
+
+echo
+echo "--- ip6tables (IPv6) ---"
+sudo ip6tables -S || true
+
+echo
+echo "--- firewall services ---"
+systemctl is-enabled nftables 2>/dev/null || true
+systemctl is-enabled firewalld 2>/dev/null || true
+systemctl is-enabled ufw 2>/dev/null || true
+systemctl is-enabled netfilter-persistent 2>/dev/null || true
+
+echo
+echo "Firewall disabled. The system should now accept all traffic."
