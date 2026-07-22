@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# --help / -h -> description, exit 0 (P101 uniform CLI help)
+case " $* " in
+  *" --help "*|*" -h "*)
+    cat <<'P101_USAGE'
+setup-fedora-sshd.sh — takes no command-line options; run with no arguments.
+P101_USAGE
+    exit 0 ;;
+esac
+
 # Function to check the last command's status and exit if it failed
 check_status() {
     if [ $? -ne 0 ]; then

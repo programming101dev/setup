@@ -1,5 +1,30 @@
 #!/usr/bin/env bash
 
+# --help / -h -> description, exit 0 (P101 uniform CLI help)
+case " $* " in
+  *" --help "*|*" -h "*)
+    cat <<'P101_USAGE'
+disable-firewall.sh
+
+Purpose:
+Completely remove packet filtering from a Linux system so that all
+traffic is accepted. This is useful for teaching labs where students
+must return a machine to a known "no firewall" baseline.
+
+What this script does:
+1. Flushes nftables rules
+2. Stops and disables common firewall managers
+3. Resets legacy iptables and ip6tables policies to ACCEPT
+4. Flushes all tables and user chains
+5. Prints verification output
+
+WARNING:
+Running this script removes all firewall protection from the host.
+Only use in controlled environments such as teaching labs.
+P101_USAGE
+    exit 0 ;;
+esac
+
 # disable-firewall.sh
 #
 # Purpose:

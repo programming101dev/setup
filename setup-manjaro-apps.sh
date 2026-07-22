@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+# --help / -h -> description, exit 0 (P101 uniform CLI help)
+case " $* " in
+  *" --help "*|*" -h "*)
+    cat <<'P101_USAGE'
+setup-manjaro-apps.sh — takes no command-line options; run with no arguments.
+P101_USAGE
+    exit 0 ;;
+esac
+
 # Function to log and handle errors
 handle_error() {
     echo "Error: $1" >&2

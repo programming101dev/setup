@@ -2,6 +2,15 @@
 # update-system.sh - unified updater for macOS, Linux distros, and FreeBSD
 
 set -euo pipefail
+
+# --help / -h -> description, exit 0 (P101 uniform CLI help)
+case " $* " in
+  *" --help "*|*" -h "*)
+    cat <<'P101_USAGE'
+update-system.sh - unified updater for macOS, Linux distros, and FreeBSD
+P101_USAGE
+    exit 0 ;;
+esac
 IFS=$' \t\n'
 
 die() { printf "Error: %s\n" "$*" >&2; exit 1; }
