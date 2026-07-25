@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 
 # --help / -h -> description, exit 0 (P101 uniform CLI help)
 case " $* " in
@@ -20,7 +21,8 @@ pkg update || handle_error "Failed to update package lists."
 pkg upgrade -y || handle_error "Failed to upgrade packages."
 
 # List of packages (POSIX-compatible format)
-pkg_packages="bash wget nano hping3 git cmake gcc llvm cppcheck pari python3 lsof gnupg graphviz sudo tmux nmap"
+# Package names come from packages.txt (single source of truth for every OS).
+pkg_packages="$("$(dirname -- "$0")/list-packages.sh" freebsd)" || handle_error "failed to read packages.txt"
 
 # Install packages with pkg
 for package in $pkg_packages; do
@@ -42,13 +44,17 @@ done
 # fi
 
 # Update /etc/rc.conf for ldconfig
-sysrc -f /etc/rc.conf ldconfig_paths="/usr/local/lib /usr/local/lib64"
+sysrc -f /etc/rc.conf ldconfig_paths="/usr/local/lib /usr/local/lib64" || handle_error "Failed to update ldconfig paths in rc.conf."
 
 # Reload ldconfig paths
-ldconfig -m /usr/local/lib /usr/local/lib64
+ldconfig -m /usr/local/lib /usr/local/lib64 || handle_error "Failed to reload ldconfig paths."
 
-# Grant sudo access to all users (with password)
-echo "ALL ALL=(ALL) ALL" | sudo tee -a /usr/local/etc/sudoers.d/all-users
+# Grant sudo access to ALL users (password still required). This is
+# DELIBERATE for throwaway teaching/lab VMs -- do NOT use on a shared or
+# production machine. Overwrites (not appends) so re-running never duplicates,
+# and sets the 0440 mode sudo expects for sudoers.d files.
+echo "ALL ALL=(ALL) ALL" | sudo tee /usr/local/etc/sudoers.d/all-users > /dev/null || handle_error "Failed to write sudoers rule."
+sudo chmod 440 /usr/local/etc/sudoers.d/all-users || handle_error "Failed to set sudoers file permissions."
 
 # Completion message
 echo "All tools installed and configured successfully."

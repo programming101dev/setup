@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -u  # not -e: each step is followed by check_status with a clear message
 
 # --help / -h -> description, exit 0 (P101 uniform CLI help)
 case " $* " in
@@ -24,7 +25,11 @@ check_status "Updating package lists"
 
 # Install OpenSSH Server
 echo "Installing OpenSSH server..."
-sudo apt install -y openssh-server
+ssh_pkgs=$("$(dirname -- "$0")/list-packages.sh" ubuntu ssh)
+check_status "Resolving the ssh package from packages.txt"
+[ -n "$ssh_pkgs" ] || { echo "Error: no ssh package listed for ubuntu in packages.txt. Exiting."; exit 1; }
+# shellcheck disable=SC2086  # word splitting intended: the cell may hold several packages
+sudo apt install -y $ssh_pkgs
 check_status "Installing OpenSSH server"
 
 # Start the SSH service
@@ -39,8 +44,7 @@ check_status "Enabling ssh service"
 
 # Verify the SSH service status
 echo "Verifying ssh service status..."
-sudo systemctl status ssh | grep "Active:"
-if [ $? -ne 0 ]; then
+if ! sudo systemctl status ssh | grep "Active:"; then
     echo "Error: ssh service is not active. Please check logs for details."
     exit 1
 fi

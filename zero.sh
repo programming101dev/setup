@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -u  # not -e: dd is expected to fail when the disk fills
 
 # --help / -h -> description, exit 0 (P101 uniform CLI help)
 case " $* " in

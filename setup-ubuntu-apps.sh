@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -u  # not -e: interactive script with its own error handling
 
 # --help / -h -> description, exit 0 (P101 uniform CLI help)
 case " $* " in
@@ -17,7 +18,8 @@ handle_error() {
 
 # Update the system
 echo "Updating system..."
-sudo apt update && sudo apt upgrade -y || handle_error "Failed to update package lists."
+sudo apt update || handle_error "Failed to update package lists."
+sudo apt upgrade -y || handle_error "Failed to upgrade packages."
 
 # Ensure wget and curl are installed
 if ! command -v wget &> /dev/null || ! command -v curl &> /dev/null; then
@@ -142,7 +144,8 @@ install_github_desktop() {
     echo "deb [signed-by=/usr/share/keyrings/github-desktop-keyring.gpg] https://packagecloud.io/shiftkey/desktop/any/ any main" | sudo tee /etc/apt/sources.list.d/github-desktop.list || handle_error "Failed to add GitHub Desktop repository."
     
     # Update the package list and install GitHub Desktop
-    sudo apt update && sudo apt install -y github-desktop || handle_error "Failed to install GitHub Desktop."
+    sudo apt update || handle_error "Failed to update package lists."
+    sudo apt install -y github-desktop || handle_error "Failed to install GitHub Desktop."
 }
 
 install_1password() {
@@ -165,7 +168,7 @@ install_1password() {
 # Prompt user for each software
 selected_packages=()
 for pkg in "${!software[@]}"; do
-    read -p "Do you want to install ${software[$pkg]}? (y/N): " choice
+    read -rp "Do you want to install ${software[$pkg]}? (y/N): " choice
     case "$choice" in
         [yY]*) selected_packages+=("$pkg") ;;
         *) echo "Skipping ${software[$pkg]}..." ;;

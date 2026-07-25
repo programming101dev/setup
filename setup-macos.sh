@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # --help / -h -> description, exit 0 (P101 uniform CLI help)
 case " $* " in
@@ -15,17 +16,39 @@ handle_error() {
     exit 1
 }
 
+# --- Homebrew bootstrap -----------------------------------------------------
+# This script is built on Homebrew. Install it if missing (its installer also
+# pulls the Xcode Command Line Tools), then load it into THIS shell and persist
+# its environment in /etc/zshenv so future shells find it. All guarded so
+# re-running never duplicates anything.
+if ! command -v brew >/dev/null 2>&1; then
+    echo "Homebrew not found; installing (this also installs the Xcode Command Line Tools)..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
+        || handle_error "Homebrew installation failed."
+fi
+
+# Locate brew (Apple Silicon /opt/homebrew, Intel /usr/local) and load it now.
+BREW=""
+for _b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    [ -x "$_b" ] && { BREW="$_b"; break; }
+done
+[ -n "$BREW" ] || BREW="$(command -v brew || true)"
+[ -n "$BREW" ] || handle_error "Homebrew installed but 'brew' not found on PATH."
+eval "$("$BREW" shellenv)"
+
+# Persist brew's environment for future login shells (idempotent).
+if ! grep -qsF "$BREW shellenv" /etc/zshenv; then
+    echo "eval \"\$($BREW shellenv)\"" | sudo tee -a /etc/zshenv >/dev/null \
+        || handle_error "Failed to add brew shellenv to /etc/zshenv."
+fi
+# ---------------------------------------------------------------------------
+
 # List of packages to install with Homebrew
-brew_packages=(
-    cppcheck
-    gcc
-    gpg
-    graphviz
-    nmap
-    pari
-    tmux
-    wget
-)
+# Package names come from packages.txt (single source of truth for every OS)
+# via list-packages.sh -- edit packages.txt, not this script, to change them.
+brew_packages=()
+while IFS= read -r _p; do brew_packages+=("$_p"); done < <("$(dirname -- "$0")/list-packages.sh" macos)
+[ "${#brew_packages[@]}" -gt 0 ] || handle_error "no packages resolved from packages.txt"
 
 # Install packages with Homebrew
 for package in "${brew_packages[@]}"; do
@@ -33,9 +56,19 @@ for package in "${brew_packages[@]}"; do
     brew install "$package" || handle_error "Failed to install $package with Homebrew."
 done
 
-sudo bash -c 'echo "export MallocNanoZone=0" >> /etc/zshenv' || handle_error "Failed to add MallocNanoZone to /etc/zshenv."
+# Disable the nano malloc zone (interferes with the sanitizers). Guarded so
+# re-running setup never duplicates the line.
+if ! grep -qs 'MallocNanoZone=0' /etc/zshenv; then
+    sudo bash -c 'echo "export MallocNanoZone=0" >> /etc/zshenv' || handle_error "Failed to add MallocNanoZone to /etc/zshenv."
+fi
 
-./setup-groups.sh
+# brew's llvm is keg-only; put its bin on PATH so the p101 clang tools (clang-tidy,
+# clang-format) and the fuzzer-capable clang resolve. Persisted, idempotent.
+_llvm_bin="$("$BREW" --prefix llvm 2>/dev/null)/bin"
+if [ -d "$_llvm_bin" ] && ! grep -qsF "$_llvm_bin" /etc/zshenv; then
+    echo "export PATH=\"$_llvm_bin:\$PATH\"" | sudo tee -a /etc/zshenv >/dev/null \
+        || handle_error "Failed to add llvm to PATH in /etc/zshenv."
+fi
 
 # Completion message
 echo "All tools installed and configured successfully. Please reboot your computer for changes to take effect."

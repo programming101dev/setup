@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # --help / -h -> description, exit 0 (P101 uniform CLI help)
 case " $* " in
@@ -19,32 +20,11 @@ handle_error() {
 sudo pacman -Syu --noconfirm || handle_error "Failed to update package lists."
 
 # List of packages to install
-packages=(
-   clang
-   clang-tools-extra
-   cmake
-   cppcheck
-   gcc
-   gdbm
-   graphviz
-   hping
-   iperf3
-   kdenlive
-   lsof
-   make
-   ncompress
-   net-tools
-   nmap
-   obs-studio
-   pari
-   pax
-   strace
-   tcpdump
-   tmux
-   traceroute
-   wireshark-qt
-   yay
-)
+# Package names come from packages.txt (single source of truth for every OS)
+# via list-packages.sh -- edit packages.txt, not this script, to change them.
+packages=()
+while IFS= read -r _p; do packages+=("$_p"); done < <("$(dirname -- "$0")/list-packages.sh" manjaro)
+[ "${#packages[@]}" -gt 0 ] || handle_error "no packages resolved from packages.txt"
 
 # Install packages
 for package in "${packages[@]}"; do
@@ -64,8 +44,6 @@ fi
 echo "Adding /usr/local/lib to library path..."
 echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/local-lib.conf > /dev/null || handle_error "Failed to modify library path."
 sudo ldconfig || handle_error "Failed to reload library configuration."
-
-./setup-groups.sh
 
 # Completion message
 echo "All tools installed and configured successfully. Please log out and log back in for group changes to take effect."

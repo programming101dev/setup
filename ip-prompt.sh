@@ -1,4 +1,4 @@
-# prompt_ip.sh  ── show the first non-loopback IPv4 address in your prompt
+# ip-prompt.sh  ── show the first non-loopback IPv4 address in your prompt
 # Works in: Bash, plain Zsh, Zsh+Powerlevel10k        ©2025
 
 ########## 1. Detect the running shell ########################################
@@ -35,7 +35,7 @@ if $p10k_ready; then
   # Define the segment only once
   if ! typeset -f prompt_my_ip >/dev/null; then
     prompt_my_ip() {
-      local ip="$(get_ip)"
+      local ip; ip="$(get_ip)"
       p10k segment -f 244 -t "🌐$ip"
     }
   fi
@@ -50,7 +50,7 @@ fi
 
 ########## 5B. Fallback: plain Bash / Zsh prompt hook #########################
 update_prompt_with_ip() {
-  local ip="$(get_ip)"
+  local ip; ip="$(get_ip)"
   if [ "$_sh" = "bash" ]; then
     PS1="${ip} ${ORIGINAL_PS1}"
   else                              # plain Zsh
@@ -61,9 +61,16 @@ update_prompt_with_ip() {
 # Run once now
 update_prompt_with_ip
 
-# Re-run just before every prompt
+# Re-run just before every prompt. It re-reads the IP each time on purpose, so
+# the prompt tracks VPN / DHCP changes during lab work.
 if [ "$_sh" = "bash" ]; then
-  PROMPT_COMMAND=update_prompt_with_ip
+  # Append to any existing PROMPT_COMMAND rather than clobbering it (starship,
+  # other hooks), and only install ourselves once even if this file is sourced
+  # again.
+  case "${PROMPT_COMMAND:-}" in
+    *update_prompt_with_ip*) : ;;
+    *) PROMPT_COMMAND="update_prompt_with_ip${PROMPT_COMMAND:+; ${PROMPT_COMMAND}}" ;;
+  esac
 else
   autoload -Uz add-zsh-hook
   add-zsh-hook precmd update_prompt_with_ip

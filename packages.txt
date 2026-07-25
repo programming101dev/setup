@@ -1,0 +1,61 @@
+# packages.txt — single source of truth mapping logical tools to per-OS package
+# names. Read by list-packages.sh; the setup-<os>.sh scripts install from here.
+#
+#   columns : name  group  ubuntu  fedora  manjaro  freebsd  macos
+#   group   : base (installed by setup-<os>.sh) | sshd (installed by setup-<os>-sshd.sh)
+#   "-"     : not installed on that OS (in the base system, unavailable, or
+#             handled by an OS-specific block in the setup script)
+#   a,b     : one tool needs several packages on that OS (comma, no spaces)
+#
+# Notes:
+#  - ubuntu's clang fuzzer/ASan runtime (libclang-rt-dev, with a versioned
+#    fallback) stays as a conditional block in setup-ubuntu.sh.
+#  - macOS relies on the Xcode CLT for git/make/clang; brew llvm supplies the
+#    fuzzer-capable clang that Apple's does not ship.
+#  - fedora "dot" and "c++" resolve via dnf provides (graphviz / gcc-c++).
+#
+# name          group  ubuntu                          fedora             manjaro            freebsd           macos
+clang           base   clang                           clang              clang              llvm              llvm
+clang-tools     base   clang-tidy,clang-format         clang-tools-extra  clang-tools-extra  -                 -
+clang-runtime   base   -                               compiler-rt        compiler-rt        -                 -
+cmake           base   cmake                           cmake              cmake              cmake             cmake
+cppcheck        base   cppcheck                        cppcheck           cppcheck           cppcheck          cppcheck
+curl            base   curl                            -                  -                  -                 -
+gcc             base   gcc                             gcc                gcc                gcc               gcc
+g++             base   g++                             c++,g++            -                  -                 -
+gcovr           base   gcovr                           gcovr              gcovr              devel/py-gcovr    gcovr
+gdb             base   gdb                             gdb                gdb                gdb               -
+gdbm            base   libgdbm-dev,libgdbm-compat-dev  gdbm-devel         gdbm               -                 -
+git             base   -                               -                  -                  git               -
+gnupg           base   -                               -                  -                  gnupg             gpg
+graphviz        base   graphviz                        dot                graphviz           graphviz          graphviz
+hping           base   hping3                          hping3             hping              hping3            -
+iperf3          base   iperf3                          iperf3             iperf3             -                 -
+kdenlive        base   kdenlive                        kdenlive           kdenlive           -                 -
+libbsd          base   libbsd-dev                      -                  -                  -                 -
+libfuse         base   libfuse2                        -                  -                  -                 -
+lsof            base   -                               -                  lsof               lsof              -
+make            base   make                            make               make               -                 -
+nano            base   -                               -                  -                  nano              -
+ncat            base   ncat                            -                  -                  -                 -
+ncompress       base   ncompress                       ncompress          ncompress          -                 -
+net-tools       base   net-tools                       -                  net-tools          -                 -
+nmap            base   nmap                            nmap               nmap               nmap              nmap
+obs-studio      base   obs-studio                      obs-studio         obs-studio         -                 -
+pari            base   pari-gp                         pari-gp            pari               pari              pari
+pax             base   pax                             spax               pax                -                 -
+python3         base   -                               -                  -                  python3           -
+sanitizers-gcc  base   -                               libasan,libubsan   -                  -                 -
+shell-bash      base   -                               -                  -                  bash              -
+shellcheck      base   shellcheck                      ShellCheck         shellcheck         hs-ShellCheck     shellcheck
+socat           base   socat                           socat              socat              socat             socat
+strace          base   -                               strace             strace             -                 -
+sudo            base   -                               -                  -                  sudo              -
+tcpdump         base   -                               -                  tcpdump            -                 -
+tmux            base   tmux                            tmux               tmux               tmux              tmux
+traceroute      base   traceroute                      -                  traceroute         -                 -
+valgrind        base   valgrind                        valgrind           valgrind           valgrind          -
+wget            base   -                               -                  -                  wget              wget
+wireshark       base   wireshark                       wireshark          wireshark-qt       -                 -
+yay             base   -                               -                  yay                -                 -
+ssh             sshd   openssh-server                  openssh-server     openssh            openssh-portable  -

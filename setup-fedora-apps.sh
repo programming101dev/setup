@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -u  # not -e: interactive script with its own error handling
 
 # --help / -h -> description, exit 0 (P101 uniform CLI help)
 case " $* " in
@@ -161,7 +162,7 @@ install_1password() {
 # Prompt user for each software
 selected_packages=()
 for pkg in "${!software[@]}"; do
-    read -p "Do you want to install ${software[$pkg]}? (y/N): " choice
+    read -rp "Do you want to install ${software[$pkg]}? (y/N): " choice
     case "$choice" in
         [yY]*) selected_packages+=("$pkg") ;;
         *) echo "Skipping ${software[$pkg]}..." ;;

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # --help / -h -> description, exit 0 (P101 uniform CLI help)
 case " $* " in
@@ -20,41 +21,24 @@ sudo apt update || handle_error "Failed to update package lists."
 sudo apt upgrade -y || handle_error "Failed to upgrade packages."
 
 # List of packages to install
-packages=(
-  clang
-  clang-tidy
-  clang-format
-  cmake
-  cppcheck
-  curl
-  gcc
-  g++
-  graphviz
-  hping3
-  iperf3
-  kdenlive
-  libbsd-dev
-  libfuse2
-  libgdbm-dev
-  libgdbm-compat-dev
-  ncat
-  ncompress
-  nmap
-  make
-  net-tools
-  obs-studio
-  pari-gp
-  pax
-  tmux
-  traceroute
-  wireshark
-)
+# Package names come from packages.txt (single source of truth for every OS)
+# via list-packages.sh -- edit packages.txt, not this script, to change them.
+packages=()
+while IFS= read -r _p; do packages+=("$_p"); done < <("$(dirname -- "$0")/list-packages.sh" ubuntu)
+[ "${#packages[@]}" -gt 0 ] || handle_error "no packages resolved from packages.txt"
 
 # Install packages
 for package in "${packages[@]}"; do
     echo "Installing $package..."
     sudo apt install -y "$package" || handle_error "Failed to install $package."
 done
+
+# libFuzzer/ASan runtime for clang (needed by fuzz.sh). The package is
+# unversioned on newer Ubuntu; fall back to the default clang's version.
+if ! sudo apt install -y libclang-rt-dev 2>/dev/null; then
+    _cv="$(clang --version | grep -oE '[0-9]+' | head -1 || true)"
+    sudo apt install -y "libclang-rt-${_cv}-dev" || handle_error "Failed to install the clang runtime (libclang-rt, needed for fuzzing/sanitizers)."
+fi
 
 # Additional setup for Wireshark
 if dpkg -l | grep -q wireshark; then
@@ -63,8 +47,6 @@ if dpkg -l | grep -q wireshark; then
 else
     echo "Wireshark not installed. Skipping configuration."
 fi
-
-./setup-groups.sh
 
 # Completion message
 echo "All tools installed and configured successfully. Please log out and log back in for group changes to take effect."

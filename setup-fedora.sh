@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # --help / -h -> description, exit 0 (P101 uniform CLI help)
 case " $* " in
@@ -19,31 +20,11 @@ handle_error() {
 sudo dnf update -y || handle_error "Failed to update package lists."
 
 # List of packages to install
-packages=(
-    c++
-    clang
-    clang-tools-extra
-    cmake
-    cppcheck
-    dot
-    g++
-    gcc
-    gdbm-devel
-    hping3
-    iperf3
-    kdenlive
-    libasan
-    libubsan
-    make
-    ncompress
-    nmap
-    obs-studio
-    pari-gp
-    spax
-    strace
-    tmux
-    wireshark
-)
+# Package names come from packages.txt (single source of truth for every OS)
+# via list-packages.sh -- edit packages.txt, not this script, to change them.
+packages=()
+while IFS= read -r _p; do packages+=("$_p"); done < <("$(dirname -- "$0")/list-packages.sh" fedora)
+[ "${#packages[@]}" -gt 0 ] || handle_error "no packages resolved from packages.txt"
 
 # Install packages
 for package in "${packages[@]}"; do

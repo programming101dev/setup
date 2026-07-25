@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -u  # not -e: some flush/reset steps may fail benignly on hosts without that firewall
 
 # --help / -h -> description, exit 0 (P101 uniform CLI help)
 case " $* " in
