@@ -33,6 +33,11 @@ FreeBSD includes `libxcrypt` in the package list because `lib_posix_xsi` wraps
 `crypt()` as `p101_crypt()`, and the FreeBSD CI image links that interface
 through the installed crypt library rather than only the base C library.
 
+On FreeBSD teaching/lab VMs, `setup-freebsd.sh` also installs a sudoers rule
+that lets every local user run `sudo` with their own password. This is
+deliberate for disposable course machines; do not use that rule on a shared or
+production FreeBSD host.
+
 ## Scripts
 
 **Base setup**
