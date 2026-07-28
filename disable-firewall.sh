@@ -21,7 +21,12 @@ What this script does:
 
 WARNING:
 Running this script removes all firewall protection from the host.
+It disables common firewall services persistently, so the change survives
+reboot unless you re-enable a firewall manager yourself.
 Only use in controlled environments such as teaching labs.
+
+Before running it, consider saving the nftables ruleset:
+  sudo nft list ruleset > firewall-before-p101.nft
 P101_USAGE
     exit 0 ;;
 esac
@@ -42,6 +47,8 @@ esac
 #
 # WARNING:
 # Running this script removes all firewall protection from the host.
+# It disables common firewall services persistently, so the change survives
+# reboot unless you re-enable a firewall manager yourself.
 # Only use in controlled environments such as teaching labs.
 
 FORCE=0
@@ -50,10 +57,17 @@ if [[ "${1:-}" == "--force" ]]; then
     FORCE=1
 fi
 
+if [[ "$(uname -s)" != "Linux" ]]; then
+    echo "disable-firewall.sh is supported only on Linux." >&2
+    exit 2
+fi
+
 if [[ "$FORCE" -ne 1 ]]; then
     echo
     echo "This script will disable nftables, iptables, and common firewall managers."
     echo "The system will accept all network traffic."
+    echo "The service-disable steps are persistent and survive reboot."
+    echo "Consider saving a backup first: sudo nft list ruleset > firewall-before-p101.nft"
     echo
     read -r -p "Continue? [y/N] " answer
 

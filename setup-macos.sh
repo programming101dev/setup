@@ -47,7 +47,8 @@ fi
 # Package names come from packages.txt (single source of truth for every OS)
 # via list-packages.sh -- edit packages.txt, not this script, to change them.
 brew_packages=()
-while IFS= read -r _p; do brew_packages+=("$_p"); done < <("$(dirname -- "$0")/list-packages.sh" macos)
+brew_package_list="$("$(dirname -- "$0")/list-packages.sh" macos)" || handle_error "failed to read packages.txt"
+while IFS= read -r _p; do brew_packages+=("$_p"); done <<< "$brew_package_list"
 [ "${#brew_packages[@]}" -gt 0 ] || handle_error "no packages resolved from packages.txt"
 
 # Install packages with Homebrew

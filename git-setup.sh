@@ -17,6 +17,14 @@ esac
 
 handle_error() { echo "Error: $1" >&2; exit 1; }
 
+target_user="${SUDO_USER:-$(id -un)}"
+if command -v getent >/dev/null 2>&1; then
+  target_home="$(getent passwd "$target_user" | cut -d: -f6)"
+else
+  target_home="$(eval "printf %s \~$target_user")"
+fi
+[ -n "$target_home" ] || target_home="$HOME"
+
 name=""; email=""
 while getopts ":n:e:" opt; do
   case "$opt" in
@@ -35,19 +43,20 @@ command -v ssh-keygen >/dev/null 2>&1 || handle_error "ssh-keygen is not install
 [ -n "$name" ]  || handle_error "a name is required."
 [ -n "$email" ] || handle_error "an email is required."
 
-git config --global user.name  "$name"  || handle_error "failed to set git user.name."
-git config --global user.email "$email" || handle_error "failed to set git user.email."
-git config --global init.defaultBranch main >/dev/null 2>&1 || true
+HOME="$target_home" git config --global user.name  "$name"  || handle_error "failed to set git user.name."
+HOME="$target_home" git config --global user.email "$email" || handle_error "failed to set git user.email."
+HOME="$target_home" git config --global init.defaultBranch main >/dev/null 2>&1 || true
 echo "git identity set: $name <$email>"
 
 # --- SSH key for GitHub -----------------------------------------------------
-key="$HOME/.ssh/id_ed25519"
+key="$target_home/.ssh/id_ed25519"
 if [ -f "$key" ]; then
   echo "An SSH key already exists at $key — leaving it untouched."
 else
   echo "Generating an ed25519 SSH key at $key ..."
-  mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+  mkdir -p "$target_home/.ssh" && chmod 700 "$target_home/.ssh"
   ssh-keygen -t ed25519 -C "$email" -f "$key" -N "" || handle_error "ssh-keygen failed."
+  chown -R "$target_user" "$target_home/.ssh" || handle_error "failed to set SSH key ownership."
 fi
 
 echo

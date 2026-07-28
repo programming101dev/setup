@@ -10,6 +10,14 @@ P101_USAGE
     exit 0 ;;
 esac
 
+target_user="${SUDO_USER:-$(id -un)}"
+if command -v getent >/dev/null 2>&1; then
+  target_home="$(getent passwd "$target_user" | cut -d: -f6)"
+else
+  target_home="$(eval "printf %s \~$target_user")"
+fi
+[ -n "$target_home" ] || target_home="$HOME"
+
 # Function to log and handle errors
 handle_error() {
     echo "Error: $1" >&2
@@ -79,7 +87,7 @@ install_jetbrains_toolbox() {
     [[ -n "$extracted_dir" ]] || handle_error "Could not find extracted jetbrains-toolbox directory."
 
     # Install location: keep the full directory
-    install_root="$HOME/.local/share/JetBrains"
+    install_root="$target_home/.local/share/JetBrains"
     install_dir="$install_root/Toolbox"
     mkdir -p "$install_root" || handle_error "Failed to create $install_root."
 
@@ -88,14 +96,16 @@ install_jetbrains_toolbox() {
     mv "$extracted_dir" "$install_dir" || handle_error "Failed to move Toolbox into $install_dir."
 
     # Ensure local bin exists
-    mkdir -p "$HOME/.local/bin" || handle_error "Failed to create ~/.local/bin."
+    mkdir -p "$target_home/.local/bin" || handle_error "Failed to create ~/.local/bin."
 
     # Symlink the launcher into ~/.local/bin
     launcher="$install_dir/bin/jetbrains-toolbox"
     [[ -x "$launcher" ]] || handle_error "Toolbox launcher not found or not executable at: $launcher"
 
-    ln -sf "$launcher" "$HOME/.local/bin/jetbrains-toolbox" \
+    ln -sf "$launcher" "$target_home/.local/bin/jetbrains-toolbox" \
         || handle_error "Failed to create symlink in ~/.local/bin."
+    sudo chown -R "$target_user" "$target_home/.local/share/JetBrains" "$target_home/.local/bin/jetbrains-toolbox" \
+        || handle_error "Failed to set Toolbox ownership."
 
     echo "JetBrains Toolbox installed."
     echo "Run it with: ~/.local/bin/jetbrains-toolbox"

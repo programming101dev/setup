@@ -11,7 +11,7 @@ IFS=$' \t\n'
 
 # Always run from this script's directory so the per-OS scripts and
 # packages.txt resolve no matter where setup.sh is invoked from.
-cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
 die() { printf "Error: %s\n" "$*" >&2; exit 1; }
 note() { printf "%s\n" "$*"; }
@@ -126,6 +126,14 @@ case "$os" in
 esac
 
 # Base script
+must_exec "./setup-${base}.sh"
+if $want_sshd; then
+  must_exec "./setup-${base}-sshd.sh"
+fi
+if $want_apps; then
+  must_exec "./setup-${base}-apps.sh"
+fi
+
 run_script "setup-${base}.sh"
 
 # Optional sshd

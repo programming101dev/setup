@@ -10,6 +10,8 @@ P101_USAGE
     exit 0 ;;
 esac
 
+target_user="${SUDO_USER:-$(id -un)}"
+
 # Function to log and handle errors
 handle_error() {
     echo "Error: $1" >&2
@@ -23,7 +25,8 @@ sudo dnf update -y || handle_error "Failed to update package lists."
 # Package names come from packages.txt (single source of truth for every OS)
 # via list-packages.sh -- edit packages.txt, not this script, to change them.
 packages=()
-while IFS= read -r _p; do packages+=("$_p"); done < <("$(dirname -- "$0")/list-packages.sh" fedora)
+package_list="$("$(dirname -- "$0")/list-packages.sh" fedora)" || handle_error "failed to read packages.txt"
+while IFS= read -r _p; do packages+=("$_p"); done <<< "$package_list"
 [ "${#packages[@]}" -gt 0 ] || handle_error "no packages resolved from packages.txt"
 
 # Install packages
@@ -35,7 +38,7 @@ done
 # Additional setup for Wireshark
 if rpm -q wireshark > /dev/null; then
     echo "Configuring Wireshark..."
-    sudo usermod -a -G wireshark "$(whoami)" || handle_error "Failed to add user to Wireshark group."
+    sudo usermod -a -G wireshark "$target_user" || handle_error "Failed to add user to Wireshark group."
 else
     echo "Wireshark not installed. Skipping configuration."
 fi

@@ -18,7 +18,7 @@ USAGE
 case " $* " in *" --help "*|*" -h "*) usage 0 ;; esac
 [ $# -ge 1 ] || usage 2
 
-dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+dir=$(CDPATH='' CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 os="$1"; tool="${2:-}"
 case "$os" in
   ubuntu) col=3 ;; fedora) col=4 ;; manjaro) col=5 ;; freebsd) col=6 ;; macos) col=7 ;;

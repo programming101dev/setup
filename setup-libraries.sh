@@ -6,7 +6,7 @@
 # compilers you want to clone + build + install the libraries and examples. Run
 # this AFTER ./setup.sh, which installs git and the compilers/tools.
 set -euo pipefail
-cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
 case " $* " in *" --help "*|*" -h "*)
   cat <<'USAGE'

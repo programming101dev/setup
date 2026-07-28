@@ -15,7 +15,7 @@ esac
 IFS=$' \t\n'
 
 # Directory of this script, so we can find list-packages.sh / packages.txt.
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 die() { printf "Error: %s\n" "$*" >&2; exit 1; }
 
