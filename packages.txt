@@ -34,6 +34,7 @@ iperf3          base   iperf3                          iperf3             iperf3
 kdenlive        base   kdenlive                        kdenlive           kdenlive           -                 -
 libbsd          base   libbsd-dev                      -                  -                  -                 -
 libfuse         base   libfuse2                        -                  -                  -                 -
+libxcrypt       base   -                               -                  -                  libxcrypt         -
 lsof            base   -                               -                  lsof               lsof              -
 make            base   make                            make               make               -                 -
 nano            base   -                               -                  -                  nano              -
