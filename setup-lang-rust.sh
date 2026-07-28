@@ -8,14 +8,21 @@ case " $* " in *" --help "*|*" -h "*)
 esac
 handle_error() { echo "Error: $1" >&2; exit 1; }
 
+script_dir="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=setup-common.sh
+. "$script_dir/setup-common.sh" || handle_error "could not load setup-common.sh."
+
 if command -v rustup >/dev/null 2>&1; then
   echo "rustup already installed; updating toolchain..."
   rustup update || handle_error "rustup update failed."
 else
-  command -v curl >/dev/null 2>&1 || handle_error "curl is required to install rustup."
   echo "Installing rustup (downloads from https://sh.rustup.rs) ..."
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
-    || handle_error "rustup install failed."
+  installer="$(mktemp "${TMPDIR:-/tmp}/p101-rustup-install.XXXXXX")" \
+    || handle_error "could not create a temporary installer file."
+  p101_download_https "https://sh.rustup.rs" "$installer" \
+    || handle_error "could not download the rustup installer."
+  sh "$installer" -y || handle_error "rustup install failed."
+  rm -f -- "$installer" || handle_error "could not remove the rustup installer."
 fi
 
 # Load cargo/rustup into THIS shell so the component step works immediately.

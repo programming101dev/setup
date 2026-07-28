@@ -35,12 +35,14 @@ if ! command -v pipx >/dev/null 2>&1 && ! python3 -m pipx --version >/dev/null 2
   python3 -m pip install --user pipx 2>/dev/null \
     || python3 -m pip install --user --break-system-packages pipx \
     || handle_error "pipx install failed (ensure pip is installed)."
-  python3 -m pipx ensurepath || true
+  python3 -m pipx ensurepath || handle_error "pipx could not add its binary directory to PATH."
 fi
 
 for tool in ruff mypy pytest ipython; do
-  echo "Installing $tool ..."
-  python3 -m pipx install "$tool" || echo "  ($tool already installed or present; continuing)"
+  echo "Ensuring $tool is installed and current ..."
+  python3 -m pipx upgrade "$tool" 2>/dev/null ||
+    python3 -m pipx install "$tool" ||
+    handle_error "pipx install/upgrade $tool failed."
 done
 
 echo

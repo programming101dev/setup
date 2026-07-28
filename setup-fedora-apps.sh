@@ -10,19 +10,17 @@ P101_USAGE
     exit 0 ;;
 esac
 
-target_user="${SUDO_USER:-$(id -un)}"
-if command -v getent >/dev/null 2>&1; then
-  target_home="$(getent passwd "$target_user" | cut -d: -f6)"
-else
-  target_home="$(eval "printf %s \~$target_user")"
-fi
-[ -n "$target_home" ] || target_home="$HOME"
-
 # Function to log and handle errors
 handle_error() {
     echo "Error: $1" >&2
     exit 1
 }
+
+script_dir="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=setup-common.sh
+. "$script_dir/setup-common.sh" || handle_error "could not load setup-common.sh."
+target_user="${SUDO_USER:-$(id -un)}"
+target_home="$(p101_user_home "$target_user")" || handle_error "could not determine the home directory for $target_user."
 
 # Update the system
 echo "Updating system..."
@@ -68,8 +66,7 @@ install_jetbrains_toolbox() {
     echo "Latest JetBrains Toolbox URL: $latest_url"
 
     # Work in a temp directory
-    tmpdir="$(mktemp -d)" || handle_error "Failed to create temp directory."
-    trap 'rm -rf "$tmpdir"' RETURN
+    tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/p101-toolbox.XXXXXX")" || handle_error "Failed to create temp directory."
 
     archive="$tmpdir/jetbrains-toolbox.tar.gz"
     curl -fL "$latest_url" -o "$archive" || handle_error "Failed to download JetBrains Toolbox."
@@ -98,6 +95,7 @@ install_jetbrains_toolbox() {
         || handle_error "Failed to create symlink in ~/.local/bin."
     sudo chown -R "$target_user" "$target_home/.local/share/JetBrains" "$target_home/.local/bin/jetbrains-toolbox" \
         || handle_error "Failed to set Toolbox ownership."
+    rm -rf -- "$tmpdir" || handle_error "Failed to remove the Toolbox temporary directory."
 
     echo "JetBrains Toolbox installed."
     echo "Run it with: ~/.local/bin/jetbrains-toolbox"
@@ -116,9 +114,11 @@ install_github_desktop() {
     fi
 
     echo "Latest GitHub Desktop RPM URL: $latest_url"
-    wget -O /tmp/github-desktop.rpm "$latest_url" || handle_error "Failed to download GitHub Desktop."
-    sudo dnf install -y /tmp/github-desktop.rpm || handle_error "Failed to install GitHub Desktop."
-    rm -f /tmp/github-desktop.rpm || handle_error "Failed to clean up GitHub Desktop temporary files."
+    tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/p101-github-desktop.XXXXXX")" || handle_error "Failed to create a temporary directory."
+    package="$tmpdir/github-desktop.rpm"
+    wget -O "$package" "$latest_url" || handle_error "Failed to download GitHub Desktop."
+    sudo dnf install -y "$package" || handle_error "Failed to install GitHub Desktop."
+    rm -rf -- "$tmpdir" || handle_error "Failed to clean up GitHub Desktop temporary files."
     echo "GitHub Desktop installed successfully."
 }
 
@@ -133,15 +133,17 @@ install_discord() {
     fi
 
     echo "Discord tar.gz URL: $discord_url"
-    curl -o /tmp/discord.tar.gz -L "$discord_url" || handle_error "Failed to download Discord."
+    tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/p101-discord.XXXXXX")" || handle_error "Failed to create a temporary directory."
+    archive="$tmpdir/discord.tar.gz"
+    curl -fL -o "$archive" "$discord_url" || handle_error "Failed to download Discord."
     
     # Use sudo to create the installation directory
     sudo mkdir -p /opt/discord || handle_error "Failed to create Discord installation directory."
-    sudo tar -xvf /tmp/discord.tar.gz -C /opt/discord --strip-components=1 || handle_error "Failed to extract Discord."
+    sudo tar -xvf "$archive" -C /opt/discord --strip-components=1 || handle_error "Failed to extract Discord."
 
     # Create symbolic link to make Discord accessible from anywhere
     sudo ln -sf /opt/discord/Discord /usr/local/bin/discord || handle_error "Failed to create symbolic link for Discord."
-    rm -f /tmp/discord.tar.gz || handle_error "Failed to clean up Discord temporary files."
+    rm -rf -- "$tmpdir" || handle_error "Failed to clean up Discord temporary files."
     echo "Discord installed successfully. You can run it using 'discord'."
 }
 
@@ -164,9 +166,11 @@ EOF
 
 install_1password() {
     echo "Installing 1Password..."
-    wget -O /tmp/1password.rpm "https://downloads.1password.com/linux/rpm/stable/x86_64/1password-latest.rpm" || handle_error "Failed to download 1Password."
-    sudo dnf install -y /tmp/1password.rpm || handle_error "Failed to install 1Password."
-    rm -f /tmp/1password.rpm || handle_error "Failed to clean up 1Password temporary files."
+    tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/p101-1password.XXXXXX")" || handle_error "Failed to create a temporary directory."
+    package="$tmpdir/1password.rpm"
+    wget -O "$package" "https://downloads.1password.com/linux/rpm/stable/x86_64/1password-latest.rpm" || handle_error "Failed to download 1Password."
+    sudo dnf install -y "$package" || handle_error "Failed to install 1Password."
+    rm -rf -- "$tmpdir" || handle_error "Failed to clean up 1Password temporary files."
 }
 
 # Prompt user for each software

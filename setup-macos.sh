@@ -16,6 +16,10 @@ handle_error() {
     exit 1
 }
 
+script_dir="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=setup-common.sh
+. "$script_dir/setup-common.sh" || handle_error "could not load setup-common.sh."
+
 # --- Homebrew bootstrap -----------------------------------------------------
 # This script is built on Homebrew. Install it if missing (its installer also
 # pulls the Xcode Command Line Tools), then load it into THIS shell and persist
@@ -23,8 +27,12 @@ handle_error() {
 # re-running never duplicates anything.
 if ! command -v brew >/dev/null 2>&1; then
     echo "Homebrew not found; installing (this also installs the Xcode Command Line Tools)..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
-        || handle_error "Homebrew installation failed."
+    installer="$(mktemp "${TMPDIR:-/tmp}/p101-homebrew-install.XXXXXX")" \
+        || handle_error "could not create a temporary installer file."
+    p101_download_https "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh" "$installer" \
+        || handle_error "could not download the Homebrew installer."
+    /bin/bash "$installer" || handle_error "Homebrew installation failed."
+    rm -f -- "$installer" || handle_error "could not remove the Homebrew installer."
 fi
 
 # Locate brew (Apple Silicon /opt/homebrew, Intel /usr/local) and load it now.

@@ -5,9 +5,19 @@ set -eu
 case " $* " in
   *" --help "*|*" -h "*)
     cat <<'P101_USAGE'
-setup-freebsd.sh — takes no command-line options; run with no arguments.
+Usage: setup-freebsd.sh [--lab-vm]
+
+  --lab-vm  also grant password-protected sudo access to every local user.
+            Use only on a disposable teaching VM.
 P101_USAGE
     exit 0 ;;
+esac
+
+lab_vm=0
+case "${1-}" in
+  "") ;;
+  --lab-vm) lab_vm=1 ;;
+  *) echo "Unknown option: $1" >&2; exit 2 ;;
 esac
 
 # Function to log and handle errors
@@ -64,12 +74,14 @@ sysrc -f /etc/rc.conf ldconfig_paths="/usr/local/lib /usr/local/lib64" || handle
 # Reload ldconfig paths
 ldconfig -m /usr/local/lib /usr/local/lib64 || handle_error "Failed to reload ldconfig paths."
 
-# Grant sudo access to ALL users (password still required). This is
-# DELIBERATE for throwaway teaching/lab VMs -- do NOT use on a shared or
-# production machine. Overwrites (not appends) so re-running never duplicates,
-# and sets the 0440 mode sudo expects for sudoers.d files.
-echo "ALL ALL=(ALL) ALL" | sudo tee /usr/local/etc/sudoers.d/all-users > /dev/null || handle_error "Failed to write sudoers rule."
-sudo chmod 440 /usr/local/etc/sudoers.d/all-users || handle_error "Failed to set sudoers file permissions."
+if [ "$lab_vm" -eq 1 ]; then
+    # Deliberate only for throwaway teaching VMs. Overwrite rather than append
+    # so reruns do not duplicate the rule.
+    echo "ALL ALL=(ALL) ALL" | sudo tee /usr/local/etc/sudoers.d/all-users > /dev/null || handle_error "Failed to write sudoers rule."
+    sudo chmod 440 /usr/local/etc/sudoers.d/all-users || handle_error "Failed to set sudoers file permissions."
+else
+    echo "Not granting machine-wide sudo access (pass --lab-vm for a disposable lab VM)."
+fi
 
 # Completion message
 echo "All tools installed and configured successfully."

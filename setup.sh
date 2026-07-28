@@ -11,7 +11,7 @@ IFS=$' \t\n'
 
 # Always run from this script's directory so the per-OS scripts and
 # packages.txt resolve no matter where setup.sh is invoked from.
-CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
 die() { printf "Error: %s\n" "$*" >&2; exit 1; }
 note() { printf "%s\n" "$*"; }

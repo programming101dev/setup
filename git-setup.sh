@@ -17,13 +17,11 @@ esac
 
 handle_error() { echo "Error: $1" >&2; exit 1; }
 
+script_dir="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=setup-common.sh
+. "$script_dir/setup-common.sh" || handle_error "could not load setup-common.sh."
 target_user="${SUDO_USER:-$(id -un)}"
-if command -v getent >/dev/null 2>&1; then
-  target_home="$(getent passwd "$target_user" | cut -d: -f6)"
-else
-  target_home="$(eval "printf %s \~$target_user")"
-fi
-[ -n "$target_home" ] || target_home="$HOME"
+target_home="$(p101_user_home "$target_user")" || handle_error "could not determine the home directory for $target_user."
 
 name=""; email=""
 while getopts ":n:e:" opt; do
@@ -45,7 +43,8 @@ command -v ssh-keygen >/dev/null 2>&1 || handle_error "ssh-keygen is not install
 
 HOME="$target_home" git config --global user.name  "$name"  || handle_error "failed to set git user.name."
 HOME="$target_home" git config --global user.email "$email" || handle_error "failed to set git user.email."
-HOME="$target_home" git config --global init.defaultBranch main >/dev/null 2>&1 || true
+HOME="$target_home" git config --global init.defaultBranch main \
+  || handle_error "failed to set the default branch name."
 echo "git identity set: $name <$email>"
 
 # --- SSH key for GitHub -----------------------------------------------------

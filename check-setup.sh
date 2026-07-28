@@ -66,7 +66,7 @@ missing=0
 for prog in "${programs[@]}"; do
     if ! command -v "$prog" &> /dev/null; then
         echo "$prog is not installed."
-        ((missing++))
+        missing=$((missing + 1))
     fi
 done
 

@@ -10,19 +10,17 @@ P101_USAGE
     exit 0 ;;
 esac
 
-target_user="${SUDO_USER:-$(id -un)}"
-if command -v getent >/dev/null 2>&1; then
-  target_home="$(getent passwd "$target_user" | cut -d: -f6)"
-else
-  target_home="$(eval "printf %s \~$target_user")"
-fi
-[ -n "$target_home" ] || target_home="$HOME"
-
 # Function to log and handle errors
 handle_error() {
     echo "Error: $1" >&2
     exit 1
 }
+
+script_dir="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=setup-common.sh
+. "$script_dir/setup-common.sh" || handle_error "could not load setup-common.sh."
+target_user="${SUDO_USER:-$(id -un)}"
+target_home="$(p101_user_home "$target_user")" || handle_error "could not determine the home directory for $target_user."
 
 # Update the system
 echo "Updating system..."
@@ -73,8 +71,7 @@ install_jetbrains_toolbox() {
     echo "Latest JetBrains Toolbox URL: $latest_url"
 
     # Work in a temp directory
-    tmpdir="$(mktemp -d)" || handle_error "Failed to create temp directory."
-    trap 'rm -rf "$tmpdir"' RETURN
+    tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/p101-toolbox.XXXXXX")" || handle_error "Failed to create temp directory."
 
     # Download & extract
     archive="$tmpdir/jetbrains-toolbox.tar.gz"
@@ -106,6 +103,7 @@ install_jetbrains_toolbox() {
         || handle_error "Failed to create symlink in ~/.local/bin."
     sudo chown -R "$target_user" "$target_home/.local/share/JetBrains" "$target_home/.local/bin/jetbrains-toolbox" \
         || handle_error "Failed to set Toolbox ownership."
+    rm -rf -- "$tmpdir" || handle_error "Failed to remove the Toolbox temporary directory."
 
     echo "JetBrains Toolbox installed."
     echo "Run it with: ~/.local/bin/jetbrains-toolbox"
@@ -119,31 +117,34 @@ install_discord() {
     # Define the Discord download URL
     discord_url="https://discord.com/api/download?platform=linux&format=deb"
 
-    # Download the Discord .deb package
-    wget -O discord.deb "$discord_url" || handle_error "Failed to download Discord."
+    tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/p101-discord.XXXXXX")" || handle_error "Failed to create a temporary directory."
+    package="$tmpdir/discord.deb"
+    wget -O "$package" "$discord_url" || handle_error "Failed to download Discord."
 
     # Verify the downloaded file exists and is valid
-    if [ ! -f discord.deb ]; then
+    if [ ! -s "$package" ]; then
         handle_error "Discord .deb package not found after download."
     fi
 
     # Attempt to install the package
-    sudo dpkg -i discord.deb || {
+    sudo dpkg -i "$package" || {
         echo "Resolving dependencies and retrying installation..."
         sudo apt-get install -f -y || handle_error "Failed to resolve dependencies for Discord."
-        sudo dpkg -i discord.deb || handle_error "Failed to install Discord after resolving dependencies."
+        sudo dpkg -i "$package" || handle_error "Failed to install Discord after resolving dependencies."
     }
 
-    rm -f discord.deb || handle_error "Failed to clean up Discord temporary files."
+    rm -rf -- "$tmpdir" || handle_error "Failed to clean up Discord temporary files."
 
     echo "Discord installed successfully."
 }
 
 install_google_chrome() {
     echo "Installing Google Chrome..."
-    wget -O google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb || handle_error "Failed to download Google Chrome."
-    sudo apt install -y ./google-chrome.deb || handle_error "Failed to install Google Chrome."
-    rm -f google-chrome.deb || handle_error "Failed to clean up Google Chrome temporary files."
+    tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/p101-chrome.XXXXXX")" || handle_error "Failed to create a temporary directory."
+    package="$tmpdir/google-chrome.deb"
+    wget -O "$package" https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb || handle_error "Failed to download Google Chrome."
+    sudo apt install -y "$package" || handle_error "Failed to install Google Chrome."
+    rm -rf -- "$tmpdir" || handle_error "Failed to clean up Google Chrome temporary files."
 }
 
 install_github_desktop() {
@@ -162,7 +163,8 @@ install_1password() {
     echo "Installing 1Password..."
 
     # Define the temporary download location
-    tmp_deb="/tmp/1password-latest.deb"
+    tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/p101-1password.XXXXXX")" || handle_error "Failed to create a temporary directory."
+    tmp_deb="$tmpdir/1password.deb"
 
     # Download the latest 1Password .deb package
     wget -O "$tmp_deb" https://downloads.1password.com/linux/debian/amd64/stable/1password-latest.deb || handle_error "Failed to download 1Password."
@@ -171,7 +173,7 @@ install_1password() {
     sudo apt install -y "$tmp_deb" || handle_error "Failed to install 1Password."
 
     # Clean up
-    rm -f "$tmp_deb"
+    rm -rf -- "$tmpdir" || handle_error "Failed to clean up 1Password temporary files."
     echo "1Password installed successfully."
 }
 

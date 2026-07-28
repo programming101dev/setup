@@ -6,7 +6,7 @@
 # productive toolchain (compiler/runtime + lint, format, test, LSP) for whichever
 # they pick. Each language script can also be run directly (./setup-lang-rust.sh).
 set -euo pipefail
-CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
 usage() {
   cat <<'USAGE'

@@ -15,7 +15,7 @@ esac
 IFS=$' \t\n'
 
 # Directory of this script, so we can find list-packages.sh / packages.txt.
-SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 die() { printf "Error: %s\n" "$*" >&2; exit 1; }
 
@@ -40,21 +40,20 @@ as_root() {
 # Install the base package set from packages.txt (the single source of truth),
 # so a machine that ran setup.sh earlier picks up packages added since. Package
 # managers no-op on already-installed packages, so this is safe every run.
-install_pkgs_apt()    { local p; for p in "$@"; do as_root apt-get install -y "$p" || echo "  (skipped: $p)"; done; }
-install_pkgs_dnf()    { local p; for p in "$@"; do as_root dnf install -y "$p"      || echo "  (skipped: $p)"; done; }
-install_pkgs_pacman() { as_root pacman -S --needed --noconfirm "$@"                 || echo "  (some pacman packages skipped)"; }
-install_pkgs_pkg()    { local p; for p in "$@"; do as_root pkg install -y "$p"      || echo "  (skipped: $p)"; done; }
-install_pkgs_brew()   { local p; for p in "$@"; do brew list --formula "$p" >/dev/null 2>&1 || brew install "$p" || echo "  (skipped: $p)"; done; }
+install_pkgs_apt()    { local p; for p in "$@"; do as_root apt-get install -y "$p"; done; }
+install_pkgs_dnf()    { local p; for p in "$@"; do as_root dnf install -y "$p"; done; }
+install_pkgs_pacman() { as_root pacman -S --needed --noconfirm "$@"; }
+install_pkgs_pkg()    { local p; for p in "$@"; do as_root pkg install -y "$p"; done; }
+install_pkgs_brew()   { local p; for p in "$@"; do brew list --formula "$p" >/dev/null 2>&1 || brew install "$p"; done; }
 
 sync_packages() {  # $1 = os key for list-packages.sh   $2 = installer function
   local oskey="$1" inst="$2" list="$SCRIPT_DIR/list-packages.sh" pkgs
   if [[ ! -x "$list" ]]; then
-    echo "Note: $list not found; skipping package sync."
-    return 0
+    die "package-list reader is missing or not executable: $list"
   fi
   echo "Syncing base packages from packages.txt ($oskey)..."
-  pkgs="$("$list" "$oskey")" || { echo "Note: could not read package list; skipping sync."; return 0; }
-  [[ -n "$pkgs" ]] || { echo "Note: empty package list for $oskey; skipping sync."; return 0; }
+  pkgs="$("$list" "$oskey")" || die "could not read package list for $oskey"
+  [[ -n "$pkgs" ]] || die "empty package list for $oskey"
   # shellcheck disable=SC2086  # word splitting intended: one package per line
   $inst $pkgs
 }
@@ -68,7 +67,7 @@ update_macos() {
     brew upgrade
     sync_packages macos install_pkgs_brew
   else
-    echo "Homebrew not found, skipping."
+    die "Homebrew not found; cannot update the declared macOS package set"
   fi
 
   echo "Running macOS Software Update..."
@@ -139,7 +138,7 @@ update_freebsd_classic() {
     as_root pkg upgrade -y
     sync_packages freebsd install_pkgs_pkg
   else
-    echo "pkg not found, skipping package updates."
+    die "pkg not found; cannot update the declared FreeBSD package set"
   fi
 }
 
