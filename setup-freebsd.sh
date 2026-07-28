@@ -30,6 +30,21 @@ for package in $pkg_packages; do
     pkg install -y "$package" || handle_error "Failed to install $package with pkg."
 done
 
+# FreeBSD Python packages are flavor-versioned (for example py313-gcovr), and
+# the available flavor changes with the repository's default Python version.
+# Install it when a binary package is published, but do not make base setup
+# depend on one exact Python flavor.
+if ! command -v gcovr >/dev/null 2>&1; then
+    echo "Looking for a FreeBSD gcovr package..."
+    gcovr_pkg="$(pkg search -q -x '^py[0-9]+-gcovr$' | head -n 1 || true)"
+    if [ -n "$gcovr_pkg" ]; then
+        echo "Installing $gcovr_pkg with pkg..."
+        pkg install -y "$gcovr_pkg" || handle_error "Failed to install $gcovr_pkg with pkg."
+    else
+        echo "No FreeBSD gcovr binary package found; skipping optional coverage reporter."
+    fi
+fi
+
 # Fix cppcheck installation (if needed)
 # Uncomment and modify this block if cppcheck issues arise again
 # if ! command -v cppcheck > /dev/null 2>&1; then

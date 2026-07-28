@@ -23,7 +23,7 @@ cppcheck        base   cppcheck                        cppcheck           cppche
 curl            base   curl                            -                  -                  -                 -
 gcc             base   gcc                             gcc                gcc                gcc               gcc
 g++             base   g++                             c++,g++            -                  -                 -
-gcovr           base   gcovr                           gcovr              gcovr              devel/py-gcovr    gcovr
+gcovr           base   gcovr                           gcovr              gcovr              -                 gcovr
 gdb             base   gdb                             gdb                gdb                gdb               -
 gdbm            base   libgdbm-dev,libgdbm-compat-dev  gdbm-devel         gdbm               -                 -
 git             base   -                               -                  -                  git               -

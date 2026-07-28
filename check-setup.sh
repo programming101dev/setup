@@ -25,7 +25,6 @@ programs=(
   "dot"
   "g++"
   "gcc"
-  "gcovr"
   "git"
   "gpg"
   "gp"
@@ -53,11 +52,11 @@ platform=$(uname)
 
 # Adjust programs list based on platform
 if [ "$platform" = "Linux" ]; then
-    programs+=("strace" "wireshark" "iperf3" "valgrind" "gdb")
+    programs+=("gcovr" "strace" "wireshark" "iperf3" "valgrind" "gdb")
 elif [ "$platform" = "FreeBSD" ]; then
     programs+=("ktrace" "valgrind" "gdb")
 elif [ "$platform" = "Darwin" ]; then  # macOS
-    programs+=("/Applications/Wireshark.app/Contents/MacOS/Wireshark")
+    programs+=("gcovr" "/Applications/Wireshark.app/Contents/MacOS/Wireshark")
 fi
 
 # Initialize a variable to count missing programs
