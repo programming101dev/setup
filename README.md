@@ -29,6 +29,10 @@ package name for each OS. It is the single source of truth: edit it (not the
 per-OS scripts) to change what gets installed. `./list-packages.sh <os>` prints
 the resolved list for a platform.
 
+FreeBSD includes `libxcrypt` in the package list because `lib_posix_xsi` wraps
+`crypt()` as `p101_crypt()`, and the FreeBSD CI image links that interface
+through the installed crypt library rather than only the base C library.
+
 ## Scripts
 
 **Base setup**
