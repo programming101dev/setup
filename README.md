@@ -56,7 +56,8 @@ through the installed crypt library rather than only the base C library.
   with its lint/format/test tools. C needs nothing extra; these are opt-in.
 - `setup-<os>-sshd.sh` — enable the SSH server (via `./setup.sh --sshd`).
 - `setup-<os>-apps.sh` — install GUI apps like JetBrains Toolbox (via
-  `./setup.sh --apps`).
+  `./setup.sh --apps`). macOS and FreeBSD currently have no required GUI app
+  bundle, so their companion scripts are explicit no-ops.
 - `disable-firewall.sh` — drop all packet filtering to a known baseline
   (teaching/lab machines only).
 - `ip-prompt.sh` — `source` it to show your current IP in the shell prompt.

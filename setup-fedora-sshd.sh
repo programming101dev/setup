@@ -21,7 +21,11 @@ check_status() {
 # Update package lists
 echo "Updating package lists..."
 sudo dnf check-update
-check_status "Updating package lists"
+dnf_rc=$?
+if [ "$dnf_rc" -ne 0 ] && [ "$dnf_rc" -ne 100 ]; then
+    echo "Error: Updating package lists failed. Exiting."
+    exit 1
+fi
 
 # Install OpenSSH Server
 echo "Installing OpenSSH server..."
