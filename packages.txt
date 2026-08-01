@@ -17,6 +17,7 @@
 # name          group  ubuntu                          fedora             manjaro            freebsd           macos
 clang           base   clang                           clang              clang              llvm              llvm
 clang-tools     base   clang-tidy,clang-format         clang-tools-extra  clang-tools-extra  -                 -
+libclang-dev    base   libclang-dev                    clang-devel        -                  -                 -
 clang-runtime   base   -                               compiler-rt        compiler-rt        -                 -
 cmake           base   cmake                           cmake              cmake              cmake             cmake
 cppcheck        base   cppcheck                        cppcheck           cppcheck           cppcheck          cppcheck
