@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # ip-prompt.sh  ── show the first non-loopback IPv4 address in your prompt
 # Works in: Bash, plain Zsh, Zsh+Powerlevel10k        ©2025
 
