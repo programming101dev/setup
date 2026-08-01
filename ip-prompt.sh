@@ -27,7 +27,7 @@ get_ip() {
 
 ########## 4. Check whether Powerlevel10k is available ########################
 p10k_ready=false
-if [ "$_sh" = "zsh" ] && (( ${+functions[p10k]} )); then
+if [ "$_sh" = "zsh" ] && eval '(( ${+functions[p10k]} ))'; then
   p10k_ready=true             # P10k is already loaded
 fi
 
@@ -42,9 +42,10 @@ if $p10k_ready; then
   fi
 
   # Insert the segment at the start of the left prompt if missing
-  if [[ ${POWERLEVEL9K_LEFT_PROMPT_ELEMENTS[(i)my_ip]} \
-        -gt ${#POWERLEVEL9K_LEFT_PROMPT_ELEMENTS} ]]; then
-    POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=("my_ip" "${(@)POWERLEVEL9K_LEFT_PROMPT_ELEMENTS}")
+  # Keep Zsh-only array syntax inside eval strings so this shared file remains
+  # syntactically valid when Bash reads it.
+  if eval '(( POWERLEVEL9K_LEFT_PROMPT_ELEMENTS[(i)my_ip] > ${#POWERLEVEL9K_LEFT_PROMPT_ELEMENTS} ))'; then
+    eval 'POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=("my_ip" "${(@)POWERLEVEL9K_LEFT_PROMPT_ELEMENTS}")'
   fi
   return 0                           # Nothing more to do under P10k
 fi
