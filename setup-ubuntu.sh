@@ -43,6 +43,19 @@ if ! sudo apt install -y libclang-rt-dev 2>/dev/null; then
     sudo apt install -y "libclang-rt-${_cv}-dev" || handle_error "Failed to install the clang runtime (libclang-rt, needed for fuzzing/sanitizers)."
 fi
 
+# lib_c_facts embeds libclang through its public C API. The compiler executable
+# is not sufficient: Debian-family systems ship clang-c/Index.h separately in
+# libclang-dev, which packages.txt installs above. Treat the header as a setup
+# postcondition so a partial or stale installation cannot report success.
+libclang_header="$(
+    find /usr/include /usr/lib/llvm-* \
+        -path '*/clang-c/Index.h' -print -quit 2>/dev/null || true
+)"
+if [ -z "$libclang_header" ]; then
+    handle_error "libclang-dev did not provide clang-c/Index.h; run 'sudo apt install --reinstall libclang-dev'."
+fi
+echo "Verified libclang C API header: $libclang_header"
+
 # Additional setup for Wireshark
 if dpkg -l | grep -q wireshark; then
     echo "Configuring Wireshark..."
